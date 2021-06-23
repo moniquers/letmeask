@@ -6,6 +6,7 @@ import { createContext } from 'react';
 import { useState } from 'react';
 import firebase from 'firebase';
 import { auth } from './services/firebase';
+import { useEffect } from 'react';
 
 type User = {
   id: string;
@@ -23,6 +24,28 @@ export const AuthContext = createContext({} as AuthContextType);
 function App() {
 
   const [user, setUser] = useState<User>();
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged(user => {
+      if (user) {
+        const { displayName, photoURL, uid } = user;
+
+        if (!displayName || !photoURL) {
+          throw new Error('Missing information from Google account')
+        }
+
+        setUser({
+          id: uid,
+          name: displayName,
+          avatar: photoURL
+        });
+      }
+    })
+
+    return () => {
+      unsubscribe();
+    }
+  }, [])
 
   async function signInWithGoogle() {
     const provider = new firebase.auth.GoogleAuthProvider();
