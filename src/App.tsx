@@ -1,79 +1,19 @@
+import { BrowserRouter, Route } from 'react-router-dom';
+
 import { Home } from './pages/Home';
 import { NewRoom } from './pages/NewRoom';
 
-import { BrowserRouter, Route } from 'react-router-dom';
-import { createContext } from 'react';
-import { useState } from 'react';
-import firebase from 'firebase';
-import { auth } from './services/firebase';
-import { useEffect } from 'react';
-
-type User = {
-  id: string;
-  name: string;
-  avatar: string;
-}
-
-type AuthContextType = {
-  user: User | undefined;
-  signInWithGoogle: () => Promise<void>;
-}
-
-export const AuthContext = createContext({} as AuthContextType);
+import { AuthContextProvider } from './contexts/AuthContext';
 
 function App() {
-
-  const [user, setUser] = useState<User>();
-
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        const { displayName, photoURL, uid } = user;
-
-        if (!displayName || !photoURL) {
-          throw new Error('Missing information from Google account')
-        }
-
-        setUser({
-          id: uid,
-          name: displayName,
-          avatar: photoURL
-        });
-      }
-    })
-
-    return () => {
-      unsubscribe();
-    }
-  }, [])
-
-  async function signInWithGoogle() {
-    const provider = new firebase.auth.GoogleAuthProvider();
-
-    const result = await auth.signInWithPopup(provider);
-
-    if (result.user) {
-      const { displayName, photoURL, uid } = result.user;
-
-      if (!displayName || !photoURL) {
-        throw new Error('Missing information from Google account')
-      }
-
-      setUser({
-        id: uid,
-        name: displayName,
-        avatar: photoURL
-      });
-    }
-  }
 
   return (
 
     <BrowserRouter>
-      <AuthContext.Provider value={{ user, signInWithGoogle }}>
+      <AuthContextProvider>
         <Route path="/" exact component={Home} />
         <Route path="/rooms/new" component={NewRoom} />
-      </AuthContext.Provider>
+      </AuthContextProvider>
     </BrowserRouter>
 
   );
