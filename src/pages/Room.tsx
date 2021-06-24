@@ -8,6 +8,20 @@ import logoImg from '../assets/images/logo.svg';
 import { RoomCode } from '../components/RoomCode';
 import { useAuth } from '../hooks/useAuth';
 import { database } from '../services/firebase';
+import { useEffect } from 'react';
+
+type FirebaseQuestions = Record<string, Questions>;
+
+type Questions = {
+    content: string;
+    author: {
+        name: string;
+        avatarUrl: string;
+    };
+    isHighlighted: boolean;
+    isAnswered: boolean;
+};
+
 
 type RoomParams = {
     id: string;
@@ -18,8 +32,34 @@ export function Room() {
     const { user } = useAuth();
 
     const [newQuestion, setNewQuestion] = useState('');
+    const [questions, setQuestions] = useState<Questions[]>([]);
+    const [title, setTitle] = useState('');
     const params = useParams<RoomParams>();
     const roomId = params.id;
+
+
+    useEffect(() => {
+        const roomRef = database.ref(`rooms/${roomId}`);
+
+        roomRef.on('value', room => {
+            const databaseRoom = room.val();
+            const firebaseQuestions = databaseRoom.questions as FirebaseQuestions ?? {};
+
+            const parsedQuestions = Object.entries(firebaseQuestions).map(([key, value]) => {
+                return {
+                    id: key,
+                    content: value.content,
+                    author: value.author,
+                    isHighlighted: value.isHighlighted,
+                    isAnswered: value.isAnswered
+                }
+            });
+            setTitle(databaseRoom.title);
+            setQuestions(parsedQuestions);
+        });
+
+
+    }, [roomId])
 
     async function handleSendQuestion(event: FormEvent) {
 
@@ -57,9 +97,11 @@ export function Room() {
             </header>
             <main>
                 <div className="room-title">
-                    <h1>Sala React</h1>
+                    <h1>Sala {title}</h1>
                     <span className="questions">
-                        4 perguntas
+                        {questions.length > 0 &&
+                            <span>{questions.length} pergunta(s)</span>
+                        }
                     </span>
                 </div>
 
@@ -83,6 +125,7 @@ export function Room() {
                         </Button>
                     </div>
                 </form>
+                {JSON.stringify(questions)}
             </main>
         </div>
     );
