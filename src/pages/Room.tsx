@@ -9,15 +9,17 @@ import { RoomCode } from '../components/RoomCode';
 import { useAuth } from '../hooks/useAuth';
 import { database } from '../services/firebase';
 import { useEffect } from 'react';
+import { Question } from '../components/Question';
 
-type FirebaseQuestions = Record<string, Questions>;
+type FirebaseQuestions = Record<string, QuestionType>;
 
-type Questions = {
-    content: string;
+type QuestionType = {
+    id: string;
     author: {
         name: string;
-        avatarUrl: string;
+        avatar: string;
     };
+    content: string;
     isHighlighted: boolean;
     isAnswered: boolean;
 };
@@ -32,7 +34,7 @@ export function Room() {
     const { user } = useAuth();
 
     const [newQuestion, setNewQuestion] = useState('');
-    const [questions, setQuestions] = useState<Questions[]>([]);
+    const [questions, setQuestions] = useState<QuestionType[]>([]);
     const [title, setTitle] = useState('');
     const params = useParams<RoomParams>();
     const roomId = params.id;
@@ -75,7 +77,7 @@ export function Room() {
             content: newQuestion,
             author: {
                 name: user.name,
-                avatarUrl: user.avatar
+                avatar: user.avatar
             },
             isHighlighted: false,
             isAnswer: false
@@ -125,7 +127,20 @@ export function Room() {
                         </Button>
                     </div>
                 </form>
-                {JSON.stringify(questions)}
+                <div className="question-list">
+                {
+                    questions.map(question => {
+                        console.log(question.author)
+                        return (
+                            <Question
+                                key={question.id}
+                                content={question.content}
+                                author={question.author}
+                            />
+                        );
+                    })
+                }
+                </div>
             </main>
         </div>
     );
