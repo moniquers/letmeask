@@ -15,7 +15,6 @@ export function AdminRoom() {
 
     const params = useParams<RoomParams>();
     const roomId = params.id;
-
     const { title, questions } = useRoom(roomId);
 
     return (
@@ -41,13 +40,17 @@ export function AdminRoom() {
                 <div className="question-list">
                     {
                         questions.map(question => {
-                            console.log(question.author)
                             return (
                                 <Question
                                     key={question.id}
                                     content={question.content}
                                     author={question.author}
-                                />
+                                >
+                                    {question.likeCount > 0 &&
+                                        <span>{question.likeCount}</span>
+                                    }
+
+                                </Question>
                             );
                         })
                     }
